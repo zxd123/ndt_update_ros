@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 14)
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(normal_distributions_transform)
-find_package(PCL 1.11 REQUIRED)
+find_package(PCL REQUIRED)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ndt_update")
 #MESSAGE("CMAKE_CURRENT_SOURCE_DIR = "${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories(${PCL_INCLUDE_DIRS})
