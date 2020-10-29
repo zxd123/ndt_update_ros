@@ -29,11 +29,15 @@ static pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt_ori;
 static pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 //updatendt的结果点云
 static pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud_update(new pcl::PointCloud<pcl::PointXYZ>);
+//原始ndt的结果点云发送到rviz上
+static sensor_msgs::PointCloud2 ori_output;
+//updatendt的结果点云发送到rviz上
+static sensor_msgs::PointCloud2 update_output;
+//申明发布器
+ros::Publisher pub;
 static size_t counter = 0;
 void
 SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
-  // TODO
-  cout<<"进入回调"<<endl;
   //记录分数之差
   static double ori_sum=0,diff_sum=0;
   //记录前一帧位姿
@@ -115,8 +119,16 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   ndt_ori.setInputTarget(target_cloud);
   end=clock();		//程序结束计时
   endtime=(double)(end-start)/CLOCKS_PER_SEC;
-
   std::cout<<"ori_Total time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
+  //转换成ros消息的格式
+  pcl::toROSMsg(*target_cloud, ori_output);
+  pcl::toROSMsg(*target_cloud_update, update_output);
+  ori_output.header.frame_id = "odom";
+  update_output.header.frame_id = "odom";
+
+  //发送到output topic
+  //pub.publish(ori_output);
+  pub.publish(update_output);
   std::string file_name = "point_cloud_" + std::to_string(counter) + ".pcd";
 
   //pcl::io::savePCDFile(file_name, point_cloud);
@@ -139,18 +151,17 @@ main (int argc, char** argv)
   // Setting max number of registration iterations.
   ndt.setMaximumIterations(60);
   ndt_ori.setMaximumIterations(60);
+  //ros部分
     ros::init(argc, argv, "point_cloud_subscriber");
   ros::NodeHandle node_handle;
+
+
+  pub = node_handle.advertise<sensor_msgs::PointCloud2> ("output_rviz", 100);
+
   ros::Subscriber point_cloud_sub =
           node_handle.subscribe("/points_raw", 100, SubscribePointCloud);
   ros::spin();
 
-
-
-  //cout << "精度相差的百分比 = " << diff_sum / ori_sum *100 <<"%"<<endl;
-  // Saving result cloud.
-  //pcl::io::savePCDFileASCII ("result_ori.pcd", *target_cloud);
-  //pcl::io::savePCDFileASCII ("result_update.pcd", *target_cloud_update);
   // Initializing point cloud visualizer
   pcl::visualization::PCLVisualizer::Ptr
           viewer_final (new pcl::visualization::PCLVisualizer ("3D Viewer"));
@@ -162,20 +173,6 @@ main (int argc, char** argv)
   viewer_final->addPointCloud<pcl::PointXYZ> (target_cloud, target_color, "target cloud");
   viewer_final->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE,
                                                   1, "target cloud");
-
-    // Coloring and visualizing transformed input cloud (green).
-//    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>
-//            output_color (output_cloud, 0, 255, 0);
-//    viewer_final->addPointCloud<pcl::PointXYZ> (output_cloud, output_color, "output cloud");
-//    viewer_final->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE,
-//                                                    1, "output cloud");
-
-    // Coloring and visualizing transformed input cloud (green).
-//    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>
-//            result_color (result_cloud, 0, 0, 255);
-//    viewer_final->addPointCloud<pcl::PointXYZ> (result_cloud, result_color, "result cloud");
-//    viewer_final->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE,
-//                                                    1, "result cloud");
 
     // Starting visualizer
     viewer_final->addCoordinateSystem (1.0, "global");
