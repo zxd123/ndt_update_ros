@@ -70,10 +70,18 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   }
   // Filtering input scan to roughly 10% of original size to increase speed of registration.
   pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  //降采样之后的update点云数据
+  pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud_update(new pcl::PointCloud<pcl::PointXYZ>);
+  //降采样之后的ori点云数据
+  pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud_ori(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::ApproximateVoxelGrid<pcl::PointXYZ> approximate_voxel_filter;
   approximate_voxel_filter.setLeafSize(0.2, 0.2, 0.2);
   approximate_voxel_filter.setInputCloud(input_cloud);
   approximate_voxel_filter.filter(*filtered_cloud);
+  //将要加入结果点云的数据进行降采样
+  approximate_voxel_filter.setLeafSize(0.1, 0.1, 0.1);
+  approximate_voxel_filter.filter(*filtered_cloud_update);
+  approximate_voxel_filter.filter(*filtered_cloud_ori);
   std::cout << "Filtered cloud contains " << filtered_cloud->size()
             << " data points from room_scan2.pcd" << std::endl;
   // Setting point cloud to be aligned.
@@ -102,8 +110,8 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   T_now_ori=ndt_ori.getFinalTransformation();
 
   // Transforming unfiltered, input cloud using found transform.
-  pcl::transformPointCloud(*input_cloud, *output_cloud, ndt.getFinalTransformation());
-  pcl::transformPointCloud(*input_cloud, *output_cloud_ori, ndt_ori.getFinalTransformation());
+  pcl::transformPointCloud(*filtered_cloud_update, *output_cloud, ndt.getFinalTransformation());
+  pcl::transformPointCloud(*filtered_cloud_ori, *output_cloud_ori, ndt_ori.getFinalTransformation());
 
   // 更新ndt地图
   start=clock();		//程序开始计时
