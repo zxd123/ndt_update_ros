@@ -225,11 +225,12 @@ class NormalDistributionsTransform : public pcl::Registration<PointSource, Point
       }
       /**************************************改动部分*************************************/
       /** \brief 把新的点云加入到target中并更新target_cells的值
-       * \param[in] 新的点云的值
+       * \param[in] 新的点云
        */
       inline void
       updateInputTarget (const PointCloudTargetConstPtr &cloud)
       {
+        //判断输入点云是否为空
         if (cloud->points.empty ())
         {
           PCL_ERROR ("[pcl::%s::setInputTarget] Invalid or empty point cloud dataset given!\n", getClassName ().c_str ());

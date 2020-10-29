@@ -580,7 +580,7 @@ class VoxelGridCovariance : public pcl::VoxelGrid<PointT>
       void
       applyUpdate (PointCloud &output);
 
-      /** \简要说明 更新 voxel structure.*/
+      /** \brief 更新 voxel structure.*/
       inline void
       upadate ()
       {

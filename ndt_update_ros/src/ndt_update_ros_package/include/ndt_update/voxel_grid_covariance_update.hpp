@@ -539,6 +539,7 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
   pcl::getMinMax3D<PointT> (*input_, min_p, max_p);
   //定义一个变量表示每次扩张2倍之后的最小值坐标
   Eigen::Vector4i min_b_power_=min_b_ ,max_b_power_ =max_b_;
+  //循环判断最大最小坐标是否要更新
   for (int i = 0; i < 32; i++) {
     if (min_b_power_[0]*leaf_size_[0]>min_p[0]) {
         min_b_power_[0]<<=1;
@@ -577,7 +578,7 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
   div_b_now_ = max_b_power_ - min_b_power_ + Eigen::Vector4i::Ones ();
   div_b_now_[3] = 0;
   Eigen::Vector4i divb_mul_new_(1, div_b_now_[0], div_b_now_[0] * div_b_now_[1], 0);
-  //判断是否格数大小发生了变化，需要更新index
+  //判断格数大小是否发生了变化，如发生变化则需要更新index
   if (div_b_now_[0]!=div_b_[0] ||
       div_b_now_[1]!=div_b_[1] ||
       div_b_now_[2]!=div_b_[2]) {
@@ -587,15 +588,9 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
     std::cout<<"voxel_centroids_leaf_indices_size before = "<<std::endl<<voxel_centroids_leaf_indices_.size()<<std::endl;
     std::cout<<"div_b_now_ = "<<std::endl<<div_b_now_<<std::endl;
     std::cout<<"div_b_ = "<<std::endl<<div_b_<<std::endl;
+    //定义临时变量存放每个ndt体素的新index
     std::map<std::size_t, Leaf> map_temp;
-//    for(int i = 0; i < voxel_centroids_leaf_indices_.size(); ++i) {
-//      int index_temp = voxel_centroids_leaf_indices_[i];
-//      int new_index = Compute_New_index(index_temp, divb_mul_new_, min_b_power_);
-//      //更新voxel_centroids_leaf_indices_的值
-//      voxel_centroids_leaf_indices_[i] = new_index;
-//
-//    }
-    //更新leaves的值
+    //更新leaves的index值
     for (typename std::map<std::size_t, Leaf>::iterator it = leaves_.begin (); it != leaves_.end (); ++it) {
         int index_temp =it -> first;
         int new_index = Compute_New_index(index_temp, divb_mul_new_, min_b_power_);
@@ -605,8 +600,10 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
     std::cout<<"leaves_size after = "<<std::endl<<leaves_.size()<<std::endl;
     std::cout<<"voxel_centroids_leaf_indices_size after = "<<std::endl<<voxel_centroids_leaf_indices_.size()<<std::endl;
   }
+  //更新原点坐标
   min_b_ = min_b_power_;
   max_b_ = max_b_power_;
+  //更新各方向上的体素数量和计算index的乘数
   div_b_ = div_b_now_;
   divb_mul_ = divb_mul_new_;
 
@@ -687,7 +684,6 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
     // Normalize the centroid
     leaf.centroid = leaf.centroid_sum_ / static_cast<float> (leaf.nr_points);
     // Point sum used for single pass covariance calculation
-    //pt_sum = leaf.mean_;
 
     // Normalize mean
     leaf.mean_ = leaf.pt_sum / leaf.nr_points;
@@ -719,14 +715,7 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
 
       // Single pass covariance calculation
       leaf.cov_ = (leaf.pt3d_pt3dT_ - 2 * (leaf.pt_sum * leaf.mean_.transpose ())) / leaf.nr_points + leaf.mean_ * leaf.mean_.transpose ();
-      //leaf.cov_ *= leaf.nr_points / (leaf.nr_points - 1.0);
       leaf.cov_ *= (leaf.nr_points - 1.0) / leaf.nr_points;
-
-      //test
-//      Eigen::Matrix3d cov_test;
-//      cov_test = (leaf.pt3d_pt3dT_ - 2 * (leaf.pt_sum * leaf.mean_.transpose ())) / leaf.nr_points + leaf.mean_ * leaf.mean_.transpose ();
-//      cov_test *= leaf.nr_points / (leaf.nr_points - 1.0);
-      //if(leaf.cov_!=cov_test) std::cout<<std::endl<<"错误"<<std::endl;
 
       //Normalize Eigen Val such that max no more than 100x min.
       eigensolver.compute (leaf.cov_);
