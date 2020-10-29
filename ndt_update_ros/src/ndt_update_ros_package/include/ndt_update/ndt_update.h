@@ -242,14 +242,8 @@ class NormalDistributionsTransform : public pcl::Registration<PointSource, Point
           //如果还没有有地图的值，执行init函数
           init ();
         }else {
-          //test
-          //std::cout<<"updateInputTarget Voxel_centroids_leaf_indices_ = "<<target_cells_.getVoxel_centroids_leaf_indices_().size()<<std::endl;
           //如果已经有了则调用更新函数
-
           Update_target_cells ();
-          //init ();
-
-
         }
       }
       /**************************************改动部分*************************************/
