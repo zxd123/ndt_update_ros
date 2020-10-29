@@ -130,8 +130,6 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   //pub.publish(ori_output);
   pub.publish(update_output);
   std::string file_name = "point_cloud_" + std::to_string(counter) + ".pcd";
-
-  //pcl::io::savePCDFile(file_name, point_cloud);
 }
 
 int
