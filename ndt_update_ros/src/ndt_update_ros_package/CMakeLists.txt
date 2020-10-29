@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  pcl_conversions
+  #pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -232,6 +234,6 @@ add_executable(ndt_test ${DIR_SRCS})
 
 #target_link_libraries (ndt_test ${PCL_LIBRARIES} )
 
-target_link_libraries (ndt_test ${PCL_LIBRARIES} )
+target_link_libraries (ndt_test ${PCL_LIBRARIES} ${catkin_LIBRARIES})
 
 install(TARGETS ndt_test RUNTIME DESTINATION bin)

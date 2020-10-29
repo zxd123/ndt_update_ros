@@ -354,9 +354,9 @@ pcl_update::VoxelGridCovariance<PointT>::applyFilter (PointCloud &output)
       leaf.cov_ *= (leaf.nr_points - 1.0) / leaf.nr_points;
 
       //test
-      Eigen::Matrix3d cov_test;
-      cov_test = (leaf.pt3d_pt3dT_ - 2 * (leaf.pt_sum * leaf.mean_.transpose ())) / leaf.nr_points + leaf.mean_ * leaf.mean_.transpose ();
-      cov_test *= leaf.nr_points / (leaf.nr_points - 1.0);
+//      Eigen::Matrix3d cov_test;
+//      cov_test = (leaf.pt3d_pt3dT_ - 2 * (leaf.pt_sum * leaf.mean_.transpose ())) / leaf.nr_points + leaf.mean_ * leaf.mean_.transpose ();
+//      cov_test *= leaf.nr_points / (leaf.nr_points - 1.0);
       //if(leaf.cov_!=cov_test) std::cout<<std::endl<<"错误"<<std::endl;
 
       //Normalize Eigen Val such that max no more than 100x min.
@@ -518,10 +518,6 @@ pcl_update::VoxelGridCovariance<PointT>::getDisplayCloud (pcl::PointCloud<pcl::P
 
 template<typename PointT> void
 pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
-  //std::cout<<"applyUpdate"<<std::endl;
-  //std::cout<<"leaves_size at begin = "<<std::endl<<leaves_.size()<<std::endl;
-  std::cout<<"voxel_centroids_leaf_indices_size at begin = "<<std::endl<<voxel_centroids_leaf_indices_.size()<<std::endl;
-  //std::cout<<"input size() = "<<std::endl<<input_->size()<<std::endl;
   // Has the input dataset been set already?
   if (!input_) {
     PCL_WARN ("[pcl::%s::applyFilter] No input dataset given!\n", getClassName ().c_str ());
@@ -563,18 +559,11 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
         max_b_power_[2]<<=1;
     }
   }
-  //test
-//  std::cout<<"min_b_ = "<<std::endl<<min_b_<<std::endl;
-//  std::cout<<"min_b_power_ = "<<std::endl<<min_b_power_<<std::endl;
-//  std::cout<<"max_b_ = "<<std::endl<<max_b_<<std::endl;
-//  std::cout<<"max_b_power_ = "<<std::endl<<max_b_power_<<std::endl;
   // Check that the leaf size is not too small, given the size of the data
   std::int64_t dx = static_cast<std::int64_t>(max_b_power_[0] - min_b_power_[0])+1;
   std::int64_t dy = static_cast<std::int64_t>(max_b_power_[1] - min_b_power_[1])+1;
   std::int64_t dz = static_cast<std::int64_t>(max_b_power_[2] - min_b_power_[2])+1;
 
-  //test
-  //std::cout<<"(dx*dy*dz) = "<<std::endl<<(dx*dy*dz)<<std::endl;
   if((dx*dy*dz) > std::numeric_limits<std::int32_t>::max())
   {
     PCL_WARN("[pcl::%s::applyFilter] Leaf size is too small for the input dataset. Integer indices would overflow.", getClassName().c_str());
@@ -734,9 +723,9 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
       leaf.cov_ *= (leaf.nr_points - 1.0) / leaf.nr_points;
 
       //test
-      Eigen::Matrix3d cov_test;
-      cov_test = (leaf.pt3d_pt3dT_ - 2 * (leaf.pt_sum * leaf.mean_.transpose ())) / leaf.nr_points + leaf.mean_ * leaf.mean_.transpose ();
-      cov_test *= leaf.nr_points / (leaf.nr_points - 1.0);
+//      Eigen::Matrix3d cov_test;
+//      cov_test = (leaf.pt3d_pt3dT_ - 2 * (leaf.pt_sum * leaf.mean_.transpose ())) / leaf.nr_points + leaf.mean_ * leaf.mean_.transpose ();
+//      cov_test *= leaf.nr_points / (leaf.nr_points - 1.0);
       //if(leaf.cov_!=cov_test) std::cout<<std::endl<<"错误"<<std::endl;
 
       //Normalize Eigen Val such that max no more than 100x min.
@@ -777,10 +766,6 @@ pcl_update::VoxelGridCovariance<PointT>::applyUpdate (PointCloud &output){
     else points_less_min++;
   }
   output.width = output.size ();
-  //std::cout<<"points_less_min = " <<points_less_min<<std::endl;
-  //std::cout<<"update output.width = " <<output.width<<std::endl;
-  //std::cout<<"update output.size = " <<output.size()<<std::endl;
-  std::cout<<"update leaves_size at end = "<<std::endl<<leaves_.size()<<std::endl;
 }
 
 
