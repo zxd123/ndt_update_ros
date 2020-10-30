@@ -79,7 +79,7 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   approximate_voxel_filter.setInputCloud(input_cloud);
   approximate_voxel_filter.filter(*filtered_cloud);
   //将要加入结果点云的数据进行降采样
-  approximate_voxel_filter.setLeafSize(0.1, 0.1, 0.1);
+  approximate_voxel_filter.setLeafSize(0.02, 0.02, 0.02);
   approximate_voxel_filter.filter(*filtered_cloud_update);
   approximate_voxel_filter.filter(*filtered_cloud_ori);
   std::cout << "Filtered cloud contains " << filtered_cloud->size()
@@ -94,8 +94,27 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   // Calculating required rigid transform to align the input cloud to the target cloud.
   pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ori(new pcl::PointCloud<pcl::PointXYZ>);
+
+  //开始匹配
+  start=clock();		//程序开始计时
   ndt.align(*output_cloud, init_guess);
+  end=clock();		//程序结束计时
+  double endtime=(double)(end-start)/CLOCKS_PER_SEC;
+  ofstream write;
+  write.open("update_align_time.txt", ios::app);                //用ios::app不会覆盖文件内容
+  write<< endtime*1000 << endl;
+  write.close();
+  //std::cout<<"update_align time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
+
+  start=clock();		//程序开始计时
   ndt_ori.align(*output_cloud_ori, init_guess_ori);
+  end=clock();		//程序结束计时
+  endtime=(double)(end-start)/CLOCKS_PER_SEC;
+  write.open("ori_align_time.txt", ios::app);                //用ios::app不会覆盖文件内容
+  write<< endtime*1000 << endl;
+  write.close();
+  //std::cout<<"ori_align time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
+
   std::cout << "Normal Distributions Transform has converged:" << ndt.hasConverged()
             << " update_score: " << ndt.getFitnessScore() << std::endl;
   std::cout << "Normal Distributions Transform has converged:" << ndt_ori.hasConverged()
@@ -117,8 +136,11 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   start=clock();		//程序开始计时
   ndt.updateInputTarget(output_cloud);
   end=clock();		//程序结束计时
-  double endtime=(double)(end-start)/CLOCKS_PER_SEC;
-  std::cout<<"update_Total time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
+  endtime=(double)(end-start)/CLOCKS_PER_SEC;
+  write.open("update_mapping_time.txt", ios::app);                //用ios::app不会覆盖文件内容
+  write<< endtime*1000 << endl;
+  write.close();
+  //std::cout<<"update_mapping time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
   //将转换后的地图加入到
   *target_cloud = *target_cloud + *output_cloud_ori;
   *target_cloud_update = *target_cloud_update + *output_cloud;
@@ -127,7 +149,10 @@ SubscribePointCloud(const sensor_msgs::PointCloud2ConstPtr& lidar_message) {
   ndt_ori.setInputTarget(target_cloud);
   end=clock();		//程序结束计时
   endtime=(double)(end-start)/CLOCKS_PER_SEC;
-  std::cout<<"ori_Total time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
+  write.open("ori_mapping_time.txt", ios::app);                //用ios::app不会覆盖文件内容
+  write<< endtime*1000 << endl;
+  write.close();
+  //std::cout<<"ori_mapping time:"<<endtime*1000<<"ms"<<std::endl;	//ms为单位
   //转换成ros消息的格式
   pcl::toROSMsg(*target_cloud, ori_output);
   pcl::toROSMsg(*target_cloud_update, update_output);
